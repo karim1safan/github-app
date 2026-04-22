@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Github App</title>
+
+    <!-- favicon -->
+    <link
+      rel="shortcut icon"
+      href="https://www.svgrepo.com/show/501210/github.svg"
+      type="image/x-icon"
+    />
+
+    <!-- font awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+      integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <!-- Outfit Font -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap"
+    />
+
+    <!-- external style -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <div class="logo-icon">
+        <i class="fa-brands fa-github"></i>
+      </div>
+      <h1>Git<span>Hub</span> Explorer</h1>
+    </header>
+
+    <main>
+      <!-- Left side -->
+      <aside aria-label="Sidebar">
+        <div class="card">
+          <h2>
+            <i
+              class="fa-solid fa-magnifying-glass"
+              style="margin-right: 6px"
+            ></i
+            >Search User
+          </h2>
+          <form id="search-form">
+            <label for="username">Username</label>
+            <input
+              type="text"
+              placeholder="e.g. karim1safan"
+              id="username"
+              autocomplete="new-password"
+              required
+            />
+
+            <button type="submit" id="submit-btn">
+              <i class="fa-brands fa-github"></i>
+              Get Repos
+            </button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>
+            <i class="fa-solid fa-tag" style="margin-right: 6px"></i>
+            Topics
+          </h2>
+          <ul id="topics">
+            <li>
+              <button>
+                <i class="fa-brands fa-html5"></i>
+                HTML
+              </button>
+            </li>
+            <li>
+              <button>
+                <i class="fa-brands fa-css3"></i>
+                CSS
+              </button>
+            </li>
+            <li>
+              <button>C++</button>
+            </li>
+
+            <li>
+              <button>C#</button>
+            </li>
+            <li>
+              <button>
+                <i class="fa-brands fa-js"></i>
+                JavaScript
+              </button>
+            </li>
+            <li>
+              <button>TypeScript</button>
+            </li>
+            <li>
+              <button>
+                <i class="fa-brands fa-php"></i>
+                PHP
+              </button>
+            </li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- Right side -->
+      <div class="right-panel" aria-label="Repositories">
+        <div class="panel-header" id="panel-header">
+          <h3 class="topic-term" id="topic-term">Topic</h3>
+          <span class="results-count" id="results-count">0</span>
+        </div>
+
+        <div class="repos" id="repos-container">
+          <!-- repo items -->
+
+          <!-- <div id="no-repo-message">
+            <p>Search for a user or choose a topic to get started 🚀</p>
+          </div> -->
+          <div class="repo-item">
+            <div class="repo-header">
+              <div class="repo-name">
+                <i class="fa-solid fa-book"></i>
+                <h3>Full Name</h3>
+              </div>
+              <span class="lang-badge">
+                <span class="lang-dot"></span>
+                Language
+              </span>
+            </div>
+
+            <p class="repo-desc">Description</p>
+
+            <div class="repo-data">
+              <p class="stars">
+                <i class="fa-solid fa-star"></i>
+                <span>0</span>
+              </p>
+              <p class="forks">
+                <i class="fa-solid fa-code-fork"></i>
+                <span>0</span>
+              </p>
+              <p class="issues">
+                <i class="fa-solid fa-bug"></i>
+                <span>0</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pagination" id="pagination" style="display: none">
+          <button class="prev-btn" id="prev-btn">
+            <i class="fa-solid fa-arrow-left"></i>
+            Previous
+          </button>
+
+          <button class="next-btn" id="next-btn">
+            <i class="fa-solid fa-arrow-right"></i>
+            Next
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Created by
+        <a href="https://github.com/karim1safan" target="_blank">
+          Karim Safan
+          <i class="fa fa-heart"></i>
+        </a>
+      </p>
+    </footer>
+
+    <script src="/js/main.js"></script>
+  </body>
+</html>
