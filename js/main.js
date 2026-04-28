@@ -16,8 +16,10 @@ const panelHeader = document.getElementById("panel-header");
 let username = "";
 let perPage = 5;
 let page = 1;
-let mode = "user"; // lang
+let mode = "user"; // lang | issues
 let lang = "";
+let currentRepo = "";
+let prevMode = "user";
 
 // ==== event listeners ====
 topics.addEventListener("click", (e) => {
@@ -178,18 +180,31 @@ function displayRepos(repos, maxPage) {
 function loadData(mode) {
   if (mode === "user") {
     fetchUserRepos(username);
+  } else if (mode === "issues") {
+    fetchIssues();
   } else {
     fetchLangRepos(lang);
   }
 }
 
 async function showIssues(fullName) {
+  if (mode !== "issues") {
+    prevMode = mode;
+  }
+  currentRepo = fullName;
+  page = 1;
+  mode = "issues";
+  fetchIssues();
+}
+
+// ==== fetch issues ====
+async function fetchIssues() {
   reposContainer.innerHTML = `<p>Loading issues...</p>`;
   pagination.style.display = "none";
 
   try {
     const response = await fetch(
-      `https://api.github.com/repos/${fullName}/issues?per_page=20&state=open`,
+      `https://api.github.com/repos/${currentRepo}/issues?per_page=${perPage}&page=${page}&state=open`,
     );
 
     if (!response.ok) {
@@ -199,25 +214,26 @@ async function showIssues(fullName) {
 
     const issues = await response.json();
 
-    displayIssues(issues, fullName);
+    displayIssues(issues);
   } catch (error) {
     reposContainer.innerHTML = `<p>${error.message}</p>`;
   }
 }
 
 // ==== render issues ====
-function displayIssues(issues, fullName) {
+function displayIssues(issues) {
   let html = `
     <div class="issues-header">
       <button class="back-btn" onclick="goBack()">
         <i class="fa-solid fa-arrow-left"></i> Back
       </button>
-      <h2><i class="fa-solid fa-bug"></i> Issues — ${fullName}</h2>
+      <h2><i class="fa-solid fa-bug"></i> Issues — ${currentRepo}</h2>
     </div>`;
 
   if (issues.length === 0) {
     html += `<p>No open issues found for this repository.</p>`;
     reposContainer.innerHTML = html;
+    pagination.style.display = "none";
     return;
   }
 
@@ -245,10 +261,14 @@ function displayIssues(issues, fullName) {
   });
 
   reposContainer.innerHTML = html;
+  pagination.style.display = "flex";
+  prevBtn.disabled = page === 1;
+  nextBtn.disabled = issues.length < perPage;
 }
 
 // ==== go back ====
 function goBack() {
+  mode = prevMode;
+  page = 1;
   loadData(mode);
-  pagination.style.display = "flex";
 }
