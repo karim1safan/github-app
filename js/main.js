@@ -5,6 +5,10 @@ const usernameInput = document.getElementById("username");
 const submitButton = document.getElementById("submit-btn");
 
 const topics = document.getElementById("topics");
+const repoToolbar = document.getElementById("repo-toolbar");
+const repoFilterInput = document.getElementById("repo-filter");
+const repoSortSelect = document.getElementById("repo-sort");
+const repoCounter = document.getElementById("repo-counter");
 
 const reposContainer = document.getElementById("repos-container");
 const pagination = document.getElementById("pagination");
@@ -12,6 +16,8 @@ const prevBtn = document.getElementById("prev-btn");
 const nextBtn = document.getElementById("next-btn");
 
 const panelHeader = document.getElementById("panel-header");
+const topicTerm = document.getElementById("topic-term");
+const resultsCount = document.getElementById("results-count");
 
 let username = "";
 let perPage = 5;
@@ -20,6 +26,18 @@ let mode = "user"; // lang | issues
 let lang = "";
 let currentRepo = "";
 let prevMode = "user";
+let allRepos = [];
+let currentRepos = [];
+let currentMaxPage = null;
+
+repoFilterInput.addEventListener("input", () => {
+  page = 1;
+  applyFiltersAndSort();
+});
+repoSortSelect.addEventListener("change", () => {
+  page = 1;
+  applyFiltersAndSort();
+});
 
 // ==== event listeners ====
 topics.addEventListener("click", (e) => {
@@ -37,13 +55,21 @@ topics.addEventListener("click", (e) => {
 prevBtn.addEventListener("click", () => {
   if (page > 1) {
     page--;
-    loadData(mode);
+    if (mode === "user") {
+      applyFiltersAndSort();
+    } else {
+      loadData(mode);
+    }
   }
 });
 
 nextBtn.addEventListener("click", () => {
   page++;
-  loadData(mode);
+  if (mode === "user") {
+    applyFiltersAndSort();
+  } else {
+    loadData(mode);
+  }
 });
 
 // ==== LOGIC ====
@@ -64,42 +90,65 @@ searchForm.addEventListener("submit", (e) => {
 
 // ==== fetch user repos ====
 async function fetchUserRepos(username) {
+  allRepos = [];
   reposContainer.innerHTML = `<p>Loading...</p>`;
+  hideRepoToolbar();
 
   try {
-    const response = await fetch(
-      `https://api.github.com/users/${username}/repos?per_page=${perPage}&page=${page}`,
-    );
+    const repos = await fetchAllUserRepos(username);
 
-    if (response.status === 404) {
-      reposContainer.innerHTML = `<p>User not found</p>`;
-      return;
-    }
-
-    if (!response.ok) {
+    if (repos.length === 0) {
       reposContainer.innerHTML = `<p>No repositories found</p>`;
       pagination.style.display = "none";
       return;
     }
 
-    const data = await response.json();
-
-    if (data.length === 0) {
-      reposContainer.innerHTML = `<p>No repositories found</p>`;
-      return;
-    }
-
-    console.log(data);
-
-    displayRepos(data, null); // User repos don't have a max page limit
+    allRepos = repos;
+    page = 1;
+    showUserRepositories(username);
   } catch (error) {
     reposContainer.innerHTML = `<p>${error.message}</p>`;
   }
 }
 
+async function fetchAllUserRepos(username) {
+  const repos = [];
+  let currentPage = 1;
+
+  while (true) {
+    const response = await fetch(
+      `https://api.github.com/users/${username}/repos?per_page=100&page=${currentPage}`,
+    );
+
+    if (response.status === 404) {
+      throw new Error("User not found");
+    }
+
+    if (response.status === 403) {
+      throw new Error("Rate limit exceeded. Please wait and try again.");
+    }
+
+    if (!response.ok) {
+      throw new Error("No repositories found");
+    }
+
+    const pageRepos = await response.json();
+    repos.push(...pageRepos);
+
+    if (pageRepos.length < 100) {
+      break;
+    }
+
+    currentPage++;
+  }
+
+  return repos;
+}
+
 // ==== fetch lang repos ====
 async function fetchLangRepos(lang) {
   reposContainer.innerHTML = `<p>Loading...</p>`;
+  hideRepoToolbar();
   try {
     const response = await fetch(
       `https://api.github.com/search/repositories?q=language:${lang}&per_page=${perPage}&page=${page}`,
@@ -124,16 +173,105 @@ async function fetchLangRepos(lang) {
       return;
     }
     const maxPage = Math.ceil(Math.min(data.total_count, 1000) / perPage);
-    displayRepos(data.items, maxPage); // GitHub Search API doesn't provide total count for pagination
+    showTopicRepositories(data.items, maxPage, `${lang} repositories`, data.total_count); // GitHub Search API provides the total count for the topic search
   } catch (error) {
     reposContainer.innerHTML = `<p>${error.message}</p>`;
   }
 }
 
-// ==== render user repos ====
-function displayRepos(repos, maxPage) {
-  reposContainer.innerHTML = "";
+function showUserRepositories(username) {
+  updateRepoHeader(`${username}'s repositories`, allRepos.length);
+  repoFilterInput.value = "";
+  repoSortSelect.value = "default";
+  repoToolbar.style.display = "flex";
+  applyFiltersAndSort();
+}
 
+function showTopicRepositories(repos, maxPage, title, totalCount) {
+  currentRepos = repos;
+  currentMaxPage = maxPage;
+  updateRepoHeader(title, totalCount);
+  renderRepositories(repos);
+  pagination.style.display = "flex";
+  prevBtn.disabled = page === 1;
+  nextBtn.disabled = page >= maxPage;
+}
+
+function updateRepoHeader(title, totalCount) {
+  panelHeader.style.display = "flex";
+  topicTerm.style.display = "flex";
+  resultsCount.style.display = "inline-flex";
+  topicTerm.textContent = title;
+  resultsCount.textContent = `${totalCount} repositories`;
+}
+
+function hideRepoToolbar() {
+  repoToolbar.style.display = "none";
+  panelHeader.style.display = "none";
+}
+
+function applyFiltersAndSort() {
+  if (mode !== "user") {
+    return;
+  }
+
+  const filterValue = repoFilterInput.value.trim().toLowerCase();
+  const sortValue = repoSortSelect.value;
+
+  let filteredRepos = allRepos.filter((repo) =>
+    (repo.name || "").toLowerCase().includes(filterValue),
+  );
+
+  if (sortValue !== "default") {
+    filteredRepos = [...filteredRepos].sort((leftRepo, rightRepo) => {
+      if (sortValue === "stars") {
+        return rightRepo.stargazers_count - leftRepo.stargazers_count;
+      }
+
+      if (sortValue === "forks") {
+        return rightRepo.forks_count - leftRepo.forks_count;
+      }
+
+      if (sortValue === "issues") {
+        return rightRepo.open_issues_count - leftRepo.open_issues_count;
+      }
+
+      if (sortValue === "updated") {
+        return new Date(rightRepo.updated_at) - new Date(leftRepo.updated_at);
+      }
+
+      return 0;
+    });
+  }
+
+  const totalFiltered = filteredRepos.length;
+  const maxPage = totalFiltered === 0 ? 1 : Math.ceil(totalFiltered / perPage);
+
+  if (page > maxPage) {
+    page = maxPage;
+  }
+
+  const startIndex = (page - 1) * perPage;
+  const pageRepos = filteredRepos.slice(startIndex, startIndex + perPage);
+
+  if (pageRepos.length === 0) {
+    reposContainer.innerHTML = `<div id="no-repo-message">No repositories match your filter.</div>`;
+  } else {
+    renderRepositories(pageRepos);
+  }
+
+  repoCounter.textContent =
+    totalFiltered === 0
+      ? "Showing 0 of 0 repositories"
+      : `Showing ${startIndex + 1}-${Math.min(startIndex + perPage, totalFiltered)} of ${totalFiltered} repositories`;
+  resultsCount.textContent = `${allRepos.length} total repositories`;
+  pagination.style.display = "flex";
+  prevBtn.disabled = page === 1;
+  nextBtn.disabled = page >= maxPage;
+}
+
+// ==== render user repos ====
+function renderRepositories(repos) {
   let html = "";
   repos.forEach((repo) => {
     html += `
@@ -172,14 +310,11 @@ function displayRepos(repos, maxPage) {
   });
 
   reposContainer.innerHTML = html;
-  pagination.style.display = "flex";
-  prevBtn.disabled = page === 1;
-  nextBtn.disabled = maxPage ? page >= maxPage : repos.length < perPage;
 }
 
 function loadData(mode) {
   if (mode === "user") {
-    fetchUserRepos(username);
+    applyFiltersAndSort();
   } else if (mode === "issues") {
     fetchIssues();
   } else {
@@ -201,6 +336,7 @@ async function showIssues(fullName) {
 async function fetchIssues() {
   reposContainer.innerHTML = `<p>Loading issues...</p>`;
   pagination.style.display = "none";
+  hideRepoToolbar();
 
   try {
     const response = await fetch(

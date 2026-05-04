@@ -231,6 +231,62 @@ form button:active {
   display: none;
 }
 
+.repo-toolbar {
+  display: none;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+  flex: 1 1 180px;
+}
+
+.toolbar-field label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.toolbar-field input,
+.toolbar-field select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: var(--transition);
+}
+
+.toolbar-field input::placeholder {
+  color: var(--text-muted);
+}
+
+.toolbar-field input:focus,
+.toolbar-field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
+
+.repo-counter {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 /* Start Repos  */
 .repos {
   display: flex;
@@ -396,6 +452,15 @@ button:disabled {
   main {
     grid-template-columns: 1fr;
     padding: 1rem;
+  }
+
+  .repo-toolbar {
+    align-items: stretch;
+  }
+
+  .repo-counter {
+    margin-left: 0;
+    white-space: normal;
   }
 }
 

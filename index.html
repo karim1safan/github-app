@@ -118,6 +118,31 @@
           <span class="results-count" id="results-count">0</span>
         </div>
 
+        <div class="repo-toolbar" id="repo-toolbar" aria-label="Repository filters" style="display: none">
+          <div class="toolbar-field">
+            <label for="repo-filter">Filter by name</label>
+            <input
+              type="text"
+              id="repo-filter"
+              placeholder="Filter loaded repositories"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="toolbar-field">
+            <label for="repo-sort">Sort by</label>
+            <select id="repo-sort">
+              <option value="default">Default order</option>
+              <option value="stars">Stars descending</option>
+              <option value="forks">Forks descending</option>
+              <option value="issues">Open issues descending</option>
+              <option value="updated">Last updated descending</option>
+            </select>
+          </div>
+
+          <p class="repo-counter" id="repo-counter">Showing 0 of 0 repositories</p>
+        </div>
+
         <div class="repos" id="repos-container">
           <!-- repo items -->
 
